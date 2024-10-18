@@ -12,6 +12,7 @@
 
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#007bff">
+  
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" href="IMG_0884.png">
@@ -65,7 +66,11 @@ const gravity = 0.5;
 const friction = 0.98;
 const bounceFactor = 0.8;
 let chaosMode = false;
-let draggingBall = null;  
+let draggingBall = null;
+let lastMouseX = 0;
+let lastMouseY = 0;
+let lastTouchX = 0;
+let lastTouchY = 0;
 
 class Ball {
   constructor(x, y, radius, color) {
@@ -76,6 +81,9 @@ class Ball {
     this.vx = 0;
     this.vy = 0;
     this.isDragging = false;
+    this.dragStartTime = null;
+    this.lastX = 0;
+    this.lastY = 0;
   }
 
   draw() {
@@ -114,6 +122,12 @@ class Ball {
   isPointInside(px, py) {
     const distance = Math.sqrt((px - this.x) ** 2 + (py - this.y) ** 2);
     return distance < this.radius;
+  }
+
+  throwBall(newX, newY) {
+    const deltaTime = (Date.now() - this.dragStartTime) / 1000; 
+    this.vx = (newX - this.lastX) / deltaTime;
+    this.vy = (newY - this.lastY) / deltaTime;
   }
 }
 
@@ -204,6 +218,9 @@ function startDrag(px, py) {
     if (balls[i].isPointInside(px, py)) {
       balls[i].isDragging = true;
       draggingBall = balls[i];
+      draggingBall.lastX = px;
+      draggingBall.lastY = py;
+      draggingBall.dragStartTime = Date.now();
       break;
     }
   }
@@ -216,8 +233,9 @@ function moveDrag(px, py) {
   }
 }
 
-function endDrag() {
+function endDrag(px, py) {
   if (draggingBall) {
+    draggingBall.throwBall(px, py);  
     draggingBall.isDragging = false;
     draggingBall = null;
   }
@@ -225,31 +243,24 @@ function endDrag() {
 
 
 canvas.addEventListener("mousedown", (e) => {
+  lastMouseX = e.clientX;
+  lastMouseY = e.clientY;
   startDrag(e.clientX, e.clientY);
 });
 
 canvas.addEventListener("mousemove", (e) => {
-  moveDrag(e.clientX, e.clientY);
+  if (draggingBall) {
+    moveDrag(e.clientX, e.clientY);
+    lastMouseX = e.clientX;
+    lastMouseY = e.clientY;
+  }
 });
 
-canvas.addEventListener("mouseup", () => {
-  endDrag();
+canvas.addEventListener("mouseup", (e) => {
+  endDrag(e.clientX, e.clientY);
 });
 
 
 canvas.addEventListener("touchstart", (e) => {
   const touch = e.touches[0];
-  startDrag(touch.clientX, touch.clientY);
-});
-
-canvas.addEventListener("touchmove", (e) => {
-  const touch = e.touches[0];
-  moveDrag(touch.clientX, touch.clientY);
-});
-
-canvas.addEventListener("touchend", () => {
-  endDrag();
-});
-  </script>
-</body>
-</html>
+  lastTouchX = touch.clientX;
