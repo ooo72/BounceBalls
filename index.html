@@ -253,4 +253,14 @@ function animate() {
 }
 
 window.addEventListener('resize', () => {
-  canvas.width = window.innerWidth
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  barriers[0].width = canvas.width;
+  barriers[1].width = canvas.width;
+  barriers[2].height = canvas.height;
+  barriers[3].height = canvas.height;
+});
+  </script>
+</body>
+</html>
