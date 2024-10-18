@@ -138,7 +138,6 @@ class Barrier {
     this.height = height;
   }
 
-  
   checkCollision(ball) {
     const nearestX = Math.max(this.x, Math.min(ball.x, this.x + this.width));
     const nearestY = Math.max(this.y, Math.min(ball.y, this.y + this.height));
@@ -252,15 +251,14 @@ function animate() {
   requestAnimationFrame(animate);
 }
 
-window.addEventListener('resize', () => {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
 
-  barriers[0].width = canvas.width;
-  barriers[1].width = canvas.width;
-  barriers[2].height = canvas.height;
-  barriers[3].height = canvas.height;
-});
-  </script>
-</body>
-</html>
+canvas.addEventListener("mousedown", (event) => {
+  const mouseX = event.clientX;
+  const mouseY = event.clientY;
+
+  for (const ball of balls) {
+    if (ball.isPointInside(mouseX, mouseY)) {
+      draggingBall = ball;
+      draggingBall.isDragging = true;
+      draggingBall.dragStartTime = Date.now();
+      lastMouseX =
