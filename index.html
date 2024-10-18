@@ -11,11 +11,10 @@
   <meta property="og:url" content="https://ooo72.github.io/BounceBalls">
 
   <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#007bff">
-  
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="apple-touch-icon" href="IMG_0884.png">
+  <meta name="theme-color" content="#007bff">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="IMG_0884.png">
   
   <style>
     body {
@@ -66,7 +65,6 @@ const gravity = 0.5;
 const friction = 0.98;
 const bounceFactor = 0.8;
 let chaosMode = false;
-
 
 class Ball {
   constructor(x, y, radius, color) {
@@ -143,7 +141,6 @@ causeChaosButton.addEventListener("click", () => {
   causeChaosButton.textContent = chaosMode ? "Chaos Mode: ON" : "Cause Chaos";
 });
 
-
 function detectCollision(ball1, ball2) {
   const dx = ball2.x - ball1.x;
   const dy = ball2.y - ball1.y;
@@ -199,20 +196,6 @@ function animate() {
 
   requestAnimationFrame(animate);
 }
-    startButton.addEventListener("click", () => {
-  startButton.style.display = 'none';
-  canvas.style.display = 'block';
-
-  for (let i = 0; i < 5; i++) {
-    const radius = 30;
-    const x = Math.random() * (canvas.width - radius * 2) + radius;
-    const y = Math.random() * (canvas.height - radius * 2) + radius;
-    const color = `hsl(${Math.random() * 360}, 50%, 50%)`;  
-    balls.push(new Ball(x, y, radius, color));
-  }
-
-  animate();
-});
   </script>
 </body>
 </html>
