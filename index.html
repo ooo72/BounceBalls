@@ -14,7 +14,7 @@
   <meta name="theme-color" content="#007bff">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="apple-touch-icon" href="IMG_0880.png">
+  <link rel="apple-touch-icon" href="IMG_0884.png">
   
   <style>
     body {
@@ -198,10 +198,58 @@ function animate() {
   requestAnimationFrame(animate);
 }
 
-canvas.addEventListener("mousedown", (e) => {
-  const mouseX = e.clientX;
-  const mouseY = e.clientY;
-  
+
+function startDrag(px, py) {
   for (let i = 0; i < balls.length; i++) {
-    if (balls[i].isPointInside(mouseX, mouseY)) {
-      balls[i].is
+    if (balls[i].isPointInside(px, py)) {
+      balls[i].isDragging = true;
+      draggingBall = balls[i];
+      break;
+    }
+  }
+}
+
+function moveDrag(px, py) {
+  if (draggingBall) {
+    draggingBall.x = px;
+    draggingBall.y = py;
+  }
+}
+
+function endDrag() {
+  if (draggingBall) {
+    draggingBall.isDragging = false;
+    draggingBall = null;
+  }
+}
+
+
+canvas.addEventListener("mousedown", (e) => {
+  startDrag(e.clientX, e.clientY);
+});
+
+canvas.addEventListener("mousemove", (e) => {
+  moveDrag(e.clientX, e.clientY);
+});
+
+canvas.addEventListener("mouseup", () => {
+  endDrag();
+});
+
+
+canvas.addEventListener("touchstart", (e) => {
+  const touch = e.touches[0];
+  startDrag(touch.clientX, touch.clientY);
+});
+
+canvas.addEventListener("touchmove", (e) => {
+  const touch = e.touches[0];
+  moveDrag(touch.clientX, touch.clientY);
+});
+
+canvas.addEventListener("touchend", () => {
+  endDrag();
+});
+  </script>
+</body>
+</html>
