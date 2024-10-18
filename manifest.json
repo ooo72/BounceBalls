@@ -1,0 +1,21 @@
+{
+  "name": "BounceBalls",
+  "short_name": "BounceBalls",
+  "description": "”and it went boooooinngggg”",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#f0f0f0",
+  "theme_color": "#007bff",
+  "icons": [
+    {
+      "src": "IMG_0884.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "IMG_0884.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}
