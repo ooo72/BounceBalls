@@ -1,5 +1,5 @@
 {
-  "name": "BounceBalls",
+  "name": "Bounce Balls",
   "short_name": "BounceBalls",
   "description": "”and it went boooooinngggg”",
   "start_url": "/index.html",
@@ -13,7 +13,7 @@
       "sizes": "192x192"
     },
     {
-      "src": "IMG_0884.png",
+      "src": "IMG_0880.png",
       "type": "image/png",
       "sizes": "512x512"
     }
