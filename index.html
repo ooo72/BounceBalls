@@ -59,9 +59,6 @@ const ctx = canvas.getContext("2d");
 const startButton = document.getElementById("startButton");
 const causeChaosButton = document.getElementById("causeChaosButton");
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-
 const gravity = 0.5;
 const friction = 0.98;
 const bounceFactor = 0.8;
@@ -69,8 +66,6 @@ let chaosMode = false;
 let draggingBall = null;
 let lastMouseX = 0;
 let lastMouseY = 0;
-let lastTouchX = 0;
-let lastTouchY = 0;
 
 class Ball {
   constructor(x, y, radius, color) {
@@ -130,42 +125,6 @@ class Ball {
   }
 }
 
-class Barrier {
-  constructor(x, y, width, height) {
-    this.x = x;
-    this.y = y;
-    this.width = width;
-    this.height = height;
-  }
-
-  checkCollision(ball) {
-    const nearestX = Math.max(this.x, Math.min(ball.x, this.x + this.width));
-    const nearestY = Math.max(this.y, Math.min(ball.y, this.y + this.height));
-    const deltaX = ball.x - nearestX;
-    const deltaY = ball.y - nearestY;
-    return (deltaX * deltaX + deltaY * deltaY) < (ball.radius * ball.radius);
-  }
-
-  resolveCollision(ball) {
-    if (this.checkCollision(ball)) {
-      if (ball.x < this.x || ball.x > this.x + this.width) {
-        ball.vx = -ball.vx * bounceFactor;
-      }
-      if (ball.y < this.y || ball.y > this.y + this.height) {
-        ball.vy = -ball.vy * bounceFactor;
-      }
-    }
-  }
-}
-
-
-const barriers = [
-  new Barrier(0, 0, canvas.width, 20),
-  new Barrier(0, canvas.height - 20, canvas.width, 20), 
-  new Barrier(0, 0, 20, canvas.height), 
-  new Barrier(canvas.width - 20, 0, 20, canvas.height) 
-];
-
 const balls = [];
 
 function spawnBalls(count) {
@@ -179,6 +138,9 @@ function spawnBalls(count) {
 }
 
 startButton.addEventListener("click", () => {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
   startButton.style.display = 'none';
   canvas.style.display = 'block';
   causeChaosButton.style.display = 'block';
@@ -192,60 +154,12 @@ causeChaosButton.addEventListener("click", () => {
   causeChaosButton.textContent = chaosMode ? "Chaos Mode: ON" : "Cause Chaos";
 });
 
-function detectCollision(ball1, ball2) {
-  const dx = ball2.x - ball1.x;
-  const dy = ball2.y - ball1.y;
-  const distance = Math.sqrt(dx * dx + dy * dy);
-
-  return distance < ball1.radius + ball2.radius;
-}
-
-function resolveCollision(ball1, ball2) {
-  const dx = ball2.x - ball1.x;
-  const dy = ball2.y - ball1.y;
-  const distance = Math.sqrt(dx * dx + dy * dy);
-
-  if (distance === 0) return;
-
-  const unitX = dx / distance;
-  const unitY = dy / distance;
-
-  const relativeVelocityX = ball2.vx - ball1.vx;
-  const relativeVelocityY = ball2.vy - ball1.vy;
-
-  const velocityAlongCollision = relativeVelocityX * unitX + relativeVelocityY * unitY;
-
-  if (velocityAlongCollision > 0) return;
-
-  const impulse = (2 * velocityAlongCollision) / (ball1.radius + ball2.radius);
-
-  ball1.vx -= impulse * ball2.radius * unitX;
-  ball1.vy -= impulse * ball2.radius * unitY;
-  ball2.vx += impulse * ball1.radius * unitX;
-  ball2.vy += impulse * ball1.radius * unitY;
-
-  if (chaosMode) {
-    spawnBalls(5); 
-  }
-}
-
 function animate() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   for (let i = 0; i < balls.length; i++) {
-    const ball1 = balls[i];
-    ball1.update();
-
-    
-    barriers.forEach(barrier => barrier.resolveCollision(ball1));
-
-    
-    for (let j = i + 1; j < balls.length; j++) {
-      const ball2 = balls[j];
-      if (detectCollision(ball1, ball2)) {
-        resolveCollision(ball1, ball2);
-      }
-    }
+    const ball = balls[i];
+    ball.update();
   }
 
   requestAnimationFrame(animate);
@@ -261,4 +175,29 @@ canvas.addEventListener("mousedown", (event) => {
       draggingBall = ball;
       draggingBall.isDragging = true;
       draggingBall.dragStartTime = Date.now();
-      lastMouseX =
+      lastMouseX = mouseX;
+      lastMouseY = mouseY;
+      break;
+    }
+  }
+});
+
+canvas.addEventListener("mousemove", (event) => {
+  if (draggingBall) {
+    const mouseX = event.clientX;
+    const mouseY = event.clientY;
+
+    draggingBall.x = mouseX;
+    draggingBall.y = mouseY;
+  }
+});
+
+canvas.addEventListener("mouseup", () => {
+  if (draggingBall) {
+    draggingBall.isDragging = false;
+    draggingBall = null;
+  }
+});
+  </script>
+</body>
+</html>
