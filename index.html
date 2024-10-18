@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BounceBalls</title>
+  
+  <meta property="og:title" content="BounceBalls">
+  <meta property="og:description" content="”and it went boooooinngggg”">
+  <meta property="og:image" content="https://www.pngplay.com/wp-content/uploads/6/Red-Ball-Transparent-PNG.png">
+  <meta property="og:url" content="https://ooo72.github.io/BounceBalls">
+
+  <link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#007bff">
+  
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="IMG_0884.png">
+  
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background-color: #f0f0f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    
+    #startButton {
+      position: absolute;
+      padding: 15px 30px;
+      font-size: 20px;
+      cursor: pointer;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    canvas {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+  </style>
+</head>
+<body>
+  <button id="startButton">Start</button>
+  <canvas id="canvas"></canvas>
+  <button id="causeChaosButton" style="display:none; position: fixed; top: 10px; right: 10px;">Cause Chaos</button>
+  
+  <script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+const startButton = document.getElementById("startButton");
+const causeChaosButton = document.getElementById("causeChaosButton");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+const gravity = 0.5;
+const friction = 0.98;
+const bounceFactor = 0.8;
+let chaosMode = false;
+
+
+class Ball {
+  constructor(x, y, radius, color) {
+    this.x = x;
+    this.y = y;
+    this.radius = radius;
+    this.color = color;
+    this.vx = 0;
+    this.vy = 0;
+    this.isDragging = false;
+    this.lastX = x;
+    this.lastY = y;
+    this.lastTime = Date.now();
+  }
+
+  draw() {
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+    ctx.fillStyle = this.color;
+    ctx.fill();
+    ctx.closePath();
+  }
+
+  update() {
+    if (!this.isDragging) {
+      this.vy += gravity;
+      this.vy *= friction;
+      this.vx *= friction;
+
+      this.x += this.vx;
+      this.y += this.vy;
+
+      if (this.x + this.radius > canvas.width || this.x - this.radius < 0) {
+        this.vx = -this.vx * bounceFactor;
+        this.x = Math.max(this.radius, Math.min(this.x, canvas.width - this.radius));
+      }
+
+      if (this.y + this.radius > canvas.height) {
+        this.vy = -this.vy * bounceFactor;
+        this.y = canvas.height - this.radius;
+      } else if (this.y - this.radius < 0) {
+        this.vy = -this.vy * bounceFactor;
+        this.y = this.radius;
+      }
+    }
+    this.draw();
+  }
+}
+
+const balls = [];
+
+function spawnBalls(count) {
+  for (let i = 0; i < count; i++) {
+    const radius = 30;
+    const x = Math.random() * (canvas.width - radius * 2) + radius;
+    const y = Math.random() * (canvas.height - radius * 2) + radius;
+    const color = `hsl(${Math.random() * 360}, 50%, 50%)`;
+    balls.push(new Ball(x, y, radius, color));
+  }
+}
+
+startButton.addEventListener("click", () => {
+  startButton.style.display = 'none';
+  canvas.style.display = 'block';
+  causeChaosButton.style.display = 'block';
+
+  spawnBalls(5); 
+  animate();
+});
+
+
+causeChaosButton.addEventListener("click", () => {
+  chaosMode = !chaosMode;
+  causeChaosButton.textContent = chaosMode ? "Chaos Mode: ON" : "Cause Chaos";
+});
+
+
+function detectCollision(ball1, ball2) {
+  const dx = ball2.x - ball1.x;
+  const dy = ball2.y - ball1.y;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+
+  return distance < ball1.radius + ball2.radius;
+}
+
+function resolveCollision(ball1, ball2) {
+  const dx = ball2.x - ball1.x;
+  const dy = ball2.y - ball1.y;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+
+  if (distance === 0) return;
+
+  const unitX = dx / distance;
+  const unitY = dy / distance;
+
+  const relativeVelocityX = ball2.vx - ball1.vx;
+  const relativeVelocityY = ball2.vy - ball1.vy;
+
+  const velocityAlongCollision = relativeVelocityX * unitX + relativeVelocityY * unitY;
+
+  if (velocityAlongCollision > 0) return;
+
+  const impulse = (2 * velocityAlongCollision) / (ball1.radius + ball2.radius);
+
+  ball1.vx -= impulse * ball2.radius * unitX;
+  ball1.vy -= impulse * ball2.radius * unitY;
+  ball2.vx += impulse * ball1.radius * unitX;
+  ball2.vy += impulse * ball1.radius * unitY;
+
+
+  if (chaosMode) {
+    spawnBalls(10); 
+  }
+}
+
+function animate() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  for (let i = 0; i < balls.length; i++) {
+    const ball1 = balls[i];
+    ball1.update();
+
+    for (let j = i + 1; j < balls.length; j++) {
+      const ball2 = balls[j];
+      if (detectCollision(ball1, ball2)) {
+        resolveCollision(ball1, ball2);
+      }
+    }
+  }
+
+  requestAnimationFrame(animate);
+}
+    startButton.addEventListener("click", () => {
+  startButton.style.display = 'none';
+  canvas.style.display = 'block';
+
+  for (let i = 0; i < 5; i++) {
+    const radius = 30;
+    const x = Math.random() * (canvas.width - radius * 2) + radius;
+    const y = Math.random() * (canvas.height - radius * 2) + radius;
+    const color = `hsl(${Math.random() * 360}, 50%, 50%)`;  
+    balls.push(new Ball(x, y, radius, color));
+  }
+
+  animate();
+});
+  </script>
+</body>
+</html>
