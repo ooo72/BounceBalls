@@ -65,6 +65,7 @@ const gravity = 0.5;
 const friction = 0.98;
 const bounceFactor = 0.8;
 let chaosMode = false;
+let draggingBall = null;  
 
 class Ball {
   constructor(x, y, radius, color) {
@@ -75,9 +76,6 @@ class Ball {
     this.vx = 0;
     this.vy = 0;
     this.isDragging = false;
-    this.lastX = x;
-    this.lastY = y;
-    this.lastTime = Date.now();
   }
 
   draw() {
@@ -112,6 +110,11 @@ class Ball {
     }
     this.draw();
   }
+
+  isPointInside(px, py) {
+    const distance = Math.sqrt((px - this.x) ** 2 + (py - this.y) ** 2);
+    return distance < this.radius;
+  }
 }
 
 const balls = [];
@@ -134,7 +137,6 @@ startButton.addEventListener("click", () => {
   spawnBalls(5); 
   animate();
 });
-
 
 causeChaosButton.addEventListener("click", () => {
   chaosMode = !chaosMode;
@@ -173,7 +175,6 @@ function resolveCollision(ball1, ball2) {
   ball2.vx += impulse * ball1.radius * unitX;
   ball2.vy += impulse * ball1.radius * unitY;
 
-
   if (chaosMode) {
     spawnBalls(5); 
   }
@@ -196,6 +197,11 @@ function animate() {
 
   requestAnimationFrame(animate);
 }
-  </script>
-</body>
-</html>
+
+canvas.addEventListener("mousedown", (e) => {
+  const mouseX = e.clientX;
+  const mouseY = e.clientY;
+  
+  for (let i = 0; i < balls.length; i++) {
+    if (balls[i].isPointInside(mouseX, mouseY)) {
+      balls[i].is
