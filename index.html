@@ -5,18 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BounceBalls</title>
   
-  <meta property="og:title" content="BounceBalls">
-  <meta property="og:description" content="”and it went boooooinngggg”">
-  <meta property="og:image" content="https://www.pngplay.com/wp-content/uploads/6/Red-Ball-Transparent-PNG.png">
-  <meta property="og:url" content="https://ooo72.github.io/BounceBalls">
+   <link rel="manifest" href="/manifest.json">
 
-  <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#007bff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="BounceBalls">
+  <link rel="apple-touch-icon" href="https://shorturl.at/bcdFQ">
   
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="apple-touch-icon" href="IMG_0880.png">
-  
+  <meta property="og:title" content="BounceBalls">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://ooo72.github.io/BounceBalls">
+  <meta property="og:image" content="https://shorturl.at/bcdFQ">
+  <meta property="og:description" content="”booweowinnnggggg”">
   <style>
     body {
       margin: 0;
@@ -27,7 +27,7 @@
       align-items: center;
       height: 100vh;
     }
-    
+
     #startButton {
       position: absolute;
       padding: 15px 30px;
@@ -51,153 +51,209 @@
 <body>
   <button id="startButton">Start</button>
   <canvas id="canvas"></canvas>
-  <button id="causeChaosButton" style="display:none; position: fixed; top: 10px; right: 10px;">Cause Chaos</button>
   
   <script>
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
-const startButton = document.getElementById("startButton");
-const causeChaosButton = document.getElementById("causeChaosButton");
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const startButton = document.getElementById("startButton");
 
-const gravity = 0.5;
-const friction = 0.98;
-const bounceFactor = 0.8;
-let chaosMode = false;
-let draggingBall = null;
-let lastMouseX = 0;
-let lastMouseY = 0;
+    
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
-class Ball {
-  constructor(x, y, radius, color) {
-    this.x = x;
-    this.y = y;
-    this.radius = radius;
-    this.color = color;
-    this.vx = 0;
-    this.vy = 0;
-    this.isDragging = null;
-    this.lastX = 0;
-    this.lastY = 0;
-  }
-
-  draw() {
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-    ctx.fillStyle = this.color;
-    ctx.fill();
-    ctx.closePath();
-  }
-
-  update() {
-    if (!this.isDragging) {
-      this.vy += gravity;
-      this.vy *= friction;
-      this.vx *= friction;
-
-      this.x += this.vx;
-      this.y += this.vy;
-
-      if (this.x + this.radius > canvas.width || this.x - this.radius < 0) {
-        this.vx = -this.vx * bounceFactor;
-        this.x = Math.max(this.radius, Math.min(this.x, canvas.width - this.radius));
+    class Ball {
+      constructor(x, y, radius, color) {
+        this.x = x;
+        this.y = y;
+        this.radius = radius;
+        this.color = color;
+        this.vx = (Math.random() - 0.5) * 10; 
+        this.vy = (Math.random() - 0.5) * 10;
+        this.isDragging = false;
+        this.lastMouseX = 0;  
+        this.lastMouseY = 0;
+        this.mass = 1; 
       }
 
-      if (this.y + this.radius > canvas.height) {
-        this.vy = -this.vy * bounceFactor;
-        this.y = canvas.height - this.radius;
-      } else if (this.y - this.radius < 0) {
-        this.vy = -this.vy * bounceFactor;
-        this.y = this.radius;
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+        ctx.closePath();
+      }
+
+      update() {
+        if (!this.isDragging) {
+          this.x += this.vx;
+          this.y += this.vy;
+
+          
+          if (this.x + this.radius > canvas.width || this.x - this.radius < 0) {
+            this.vx = -this.vx;
+          }
+          if (this.y + this.radius > canvas.height || this.y - this.radius < 0) {
+            this.vy = -this.vy;
+          }
+        }
+        this.draw();
+      }
+
+      isMouseOver(mx, my) {
+        return Math.sqrt((mx - this.x) ** 2 + (my - this.y) ** 2) < this.radius;
+      }
+
+      
+      hasCollidedWith(otherBall) {
+        const dist = Math.sqrt((this.x - otherBall.x) ** 2 + (this.y - otherBall.y) ** 2);
+        return dist < this.radius + otherBall.radius;
+      }
+
+      
+      resolveCollision(otherBall) {
+        const dx = this.x - otherBall.x;
+        const dy = this.y - otherBall.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance === 0) return; 
+
+      
+        const normalX = dx / distance;
+        const normalY = dy / distance;
+
+      
+        const tangentX = -normalY;
+        const tangentY = normalX;
+
+        
+        const dpTan1 = this.vx * tangentX + this.vy * tangentY;
+        const dpTan2 = otherBall.vx * tangentX + otherBall.vy * tangentY;
+
+       
+        const dpNorm1 = this.vx * normalX + this.vy * normalY;
+        const dpNorm2 = otherBall.vx * normalX + otherBall.vy * normalY;
+
+        
+        const m1 = (dpNorm1 * (this.mass - otherBall.mass) + 2 * otherBall.mass * dpNorm2) / (this.mass + otherBall.mass);
+        const m2 = (dpNorm2 * (otherBall.mass - this.mass) + 2 * this.mass * dpNorm1) / (this.mass + otherBall.mass);
+
+
+        this.vx = tangentX * dpTan1 + normalX * m1;
+        this.vy = tangentY * dpTan1 + normalY * m1;
+        otherBall.vx = tangentX * dpTan2 + normalX * m2;
+        otherBall.vy = tangentY * dpTan2 + normalY * m2;
       }
     }
-    this.draw();
-  }
 
-  isPointInside(px, py) {
-    const distance = Math.sqrt((px - this.x) ** 2 + (py - this.y) ** 2);
-    return distance < this.radius;
-  }
+    const balls = [];
+    let draggingBall = null;
+    let offsetX, offsetY;
 
-  throwBall(newX, newY) {
-    const deltaTime = (Date.now() - this.dragStartTime) / 1000; 
-    this.vx = (newX - this.lastX) / deltaTime;
-    this.vy = (newY - this.lastY) / deltaTime;
-  }
-}
-
-const balls = [];
-
-function spawnBalls(count) {
-  for (let i = 0; i < count; i++) {
-    const radius = 30;
-    const x = Math.random() * (canvas.width - radius * 2) + radius;
-    const y = Math.random() * (canvas.height - radius * 2) + radius;
-    const color = `hsl(${Math.random() * 360}, 50%, 50%)`;
-    balls.push(new Ball(x, y, radius, color));
-  }
-}
-
-startButton.addEventListener("click", () => {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-
-  startButton.style.display = 'none';
-  canvas.style.display = 'block';
-  causeChaosButton.style.display = 'block';
-
-  spawnBalls(5); 
-  animate();
-});
-
-causeChaosButton.addEventListener("click", () => {
-  chaosMode = !chaosMode;
-  causeChaosButton.textContent = chaosMode ? "Chaos Mode: ON" : "Cause Chaos";
-});
-
-function animate() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  for (let i = 0; i < balls.length; i++) {
-    const ball = balls[i];
-    ball.update();
-  }
-
-  requestAnimationFrame(animate);
-}
-
-
-canvas.addEventListener("mousedown", (event) => {
-  const mouseX = event.clientX;
-  const mouseY = event.clientY;
-
-  for (const ball of balls) {
-    if (ball.isPointInside(mouseX, mouseY)) {
-      draggingBall = ball;
-      draggingBall.isDragging = true;
-      draggingBall.dragStartTime = Date.now();
-      lastMouseX = mouseX;
-      lastMouseY = mouseY;
-      break;
+    
+    function handleDragStart(x, y) {
+      for (let ball of balls) {
+        if (ball.isMouseOver(x, y)) {
+          draggingBall = ball;
+          draggingBall.isDragging = true;
+          offsetX = x - ball.x;
+          offsetY = y - ball.y;
+          draggingBall.lastMouseX = x;
+          draggingBall.lastMouseY = y;
+          break;
+        }
+      }
     }
-  }
-});
 
-canvas.addEventListener("mousemove", (event) => {
-  if (draggingBall) {
-    const mouseX = event.clientX;
-    const mouseY = event.clientY;
+    function handleDragMove(x, y) {
+      if (draggingBall) {
+        draggingBall.x = x - offsetX;
+        draggingBall.y = y - offsetY;
 
-    draggingBall.x = mouseX;
-    draggingBall.y = mouseY;
-  }
-});
+        
+        const dx = x - draggingBall.lastMouseX;
+        const dy = y - draggingBall.lastMouseY;
+        draggingBall.vx = dx * 0.2;  
+        draggingBall.vy = dy * 0.2;
 
-canvas.addEventListener("mouseup", () => {
-  if (draggingBall) {
-    draggingBall.isDragging = false;
-    draggingBall = null;
-  }
-});
+        draggingBall.lastMouseX = x;
+        draggingBall.lastMouseY = y;
+      }
+    }
+
+    function handleDragEnd() {
+      if (draggingBall) {
+        draggingBall.isDragging = false;
+        draggingBall = null;
+      }
+    }
+
+    
+    canvas.addEventListener("mousedown", (e) => handleDragStart(e.clientX, e.clientY));
+    canvas.addEventListener("mousemove", (e) => handleDragMove(e.clientX, e.clientY));
+    canvas.addEventListener("mouseup", handleDragEnd);
+
+   
+    canvas.addEventListener("touchstart", (e) => {
+      const touch = e.touches[0];
+      handleDragStart(touch.clientX, touch.clientY);
+    });
+
+    canvas.addEventListener("touchmove", (e) => {
+      const touch = e.touches[0];
+      handleDragMove(touch.clientX, touch.clientY);
+    });
+
+    canvas.addEventListener("touchend", handleDragEnd);
+
+  
+    function checkCollisions() {
+      for (let i = 0; i < balls.length; i++) {
+        for (let j = i + 1; j < balls.length; j++) {
+          if (balls[i].hasCollidedWith(balls[j])) {
+            balls[i].resolveCollision(balls[j]);
+          }
+        }
+      }
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (let ball of balls) {
+        ball.update();
+      }
+
+      checkCollisions();
+
+      requestAnimationFrame(animate);
+    }
+
+    
+    startButton.addEventListener("click", () => {
+      
+      startButton.style.display = 'none';
+      
+      
+      canvas.style.display = 'block';
+
+      
+      for (let i = 0; i < 5; i++) {
+        const radius = 30;
+        const x = Math.random() * (canvas.width - radius * 2) + radius;
+        const y = Math.random() * (canvas.height - radius * 2) + radius;
+        const color = `hsl(${Math.random() * 360}, 50%, 50%)`;
+        balls.push(new Ball(x, y, radius, color));
+      }
+
+     
+      animate();
+    });
+
+    
+    window.addEventListener("resize", () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
   </script>
 </body>
 </html>
