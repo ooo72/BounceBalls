@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BounceBalls</title>
-
+  
   <meta property="og:title" content="BounceBalls">
   <meta property="og:description" content="”and it went boooooinngggg”">
   <meta property="og:image" content="https://www.pngplay.com/wp-content/uploads/6/Red-Ball-Transparent-PNG.png">
@@ -12,10 +12,11 @@
 
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#007bff">
+  
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" href="IMG_0880.png">
-
+  
   <style>
     body {
       margin: 0;
@@ -53,160 +54,187 @@
   <button id="causeChaosButton" style="display:none; position: fixed; top: 10px; right: 10px;">Cause Chaos</button>
   
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const canvas = document.getElementById("canvas");
-      const ctx = canvas.getContext("2d");
-      const startButton = document.getElementById("startButton");
-      const causeChaosButton = document.getElementById("causeChaosButton");
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+const startButton = document.getElementById("startButton");
+const causeChaosButton = document.getElementById("causeChaosButton");
 
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-      const gravity = 0.5;
-      const friction = 0.98;
-      const bounceFactor = 0.8;
-      let chaosMode = false;
-      let draggingBall = null;
-      let lastX, lastY;
+const gravity = 0.5;
+const friction = 0.98;
+const bounceFactor = 0.8;
+let chaosMode = false;
+let draggingBall = null;
+let lastMouseX = 0;
+let lastMouseY = 0;
+let lastTouchX = 0;
+let lastTouchY = 0;
 
-      class Ball {
-        constructor(x, y, radius, color) {
-          this.x = x;
-          this.y = y;
-          this.radius = radius;
-          this.color = color;
-          this.vx = 0;
-          this.vy = 0;
-          this.isDragging = false;
-        }
+class Ball {
+  constructor(x, y, radius, color) {
+    this.x = x;
+    this.y = y;
+    this.radius = radius;
+    this.color = color;
+    this.vx = 0;
+    this.vy = 0;
+    this.isDragging = null;
+    this.lastX = 0;
+    this.lastY = 0;
+  }
 
-        draw() {
-          ctx.beginPath();
-          ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-          ctx.fillStyle = this.color;
-          ctx.fill();
-          ctx.closePath();
-        }
+  draw() {
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+    ctx.fillStyle = this.color;
+    ctx.fill();
+    ctx.closePath();
+  }
 
-        update() {
-          if (!this.isDragging) {
-            this.vy += gravity;
-            this.vy *= friction;
-            this.vx *= friction;
+  update() {
+    if (!this.isDragging) {
+      this.vy += gravity;
+      this.vy *= friction;
+      this.vx *= friction;
 
-            this.x += this.vx;
-            this.y += this.vy;
+      this.x += this.vx;
+      this.y += this.vy;
 
-            if (this.x + this.radius > canvas.width || this.x - this.radius < 0) {
-              this.vx = -this.vx * bounceFactor;
-              this.x = Math.max(this.radius, Math.min(this.x, canvas.width - this.radius));
-            }
-
-            if (this.y + this.radius > canvas.height) {
-              this.vy = -this.vy * bounceFactor;
-              this.y = canvas.height - this.radius;
-            }
-          }
-          this.draw();
-        }
-
-        isPointInside(px, py) {
-          const distance = Math.sqrt((px - this.x) ** 2 + (py - this.y) ** 2);
-          return distance < this.radius;
-        }
-
-        throwBall(newX, newY, lastX, lastY) {
-          this.vx = (newX - lastX) * 0.1;  
-          this.vy = (newY - lastY) * 0.1;
-        }
+      if (this.x + this.radius > canvas.width || this.x - this.radius < 0) {
+        this.vx = -this.vx * bounceFactor;
+        this.x = Math.max(this.radius, Math.min(this.x, canvas.width - this.radius));
       }
 
-      const balls = [];
-
-      function spawnBalls(count) {
-        for (let i = 0; i < count; i++) {
-          const radius = 30;
-          const x = Math.random() * (canvas.width - radius * 2) + radius;
-          const y = Math.random() * (canvas.height - radius * 2) + radius;
-          const color = `hsl(${Math.random() * 360}, 50%, 50%)`;
-          balls.push(new Ball(x, y, radius, color));
-        }
+      if (this.y + this.radius > canvas.height) {
+        this.vy = -this.vy * bounceFactor;
+        this.y = canvas.height - this.radius;
+      } else if (this.y - this.radius < 0) {
+        this.vy = -this.vy * bounceFactor;
+        this.y = this.radius;
       }
+    }
+    this.draw();
+  }
 
-      function animate() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+  isPointInside(px, py) {
+    const distance = Math.sqrt((px - this.x) ** 2 + (py - this.y) ** 2);
+    return distance < this.radius;
+  }
 
-        balls.forEach(ball => ball.update());
+  throwBall(newX, newY) {
+    const deltaTime = (Date.now() - this.dragStartTime) / 1000; 
+    this.vx = (newX - this.lastX) / deltaTime;
+    this.vy = (newY - this.lastY) / deltaTime;
+  }
+}
 
-        requestAnimationFrame(animate);
+class Barrier {
+  constructor(x, y, width, height) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+  }
+
+  
+  checkCollision(ball) {
+    const nearestX = Math.max(this.x, Math.min(ball.x, this.x + this.width));
+    const nearestY = Math.max(this.y, Math.min(ball.y, this.y + this.height));
+    const deltaX = ball.x - nearestX;
+    const deltaY = ball.y - nearestY;
+    return (deltaX * deltaX + deltaY * deltaY) < (ball.radius * ball.radius);
+  }
+
+  resolveCollision(ball) {
+    if (this.checkCollision(ball)) {
+      if (ball.x < this.x || ball.x > this.x + this.width) {
+        ball.vx = -ball.vx * bounceFactor;
       }
-
-      function startDrag(px, py) {
-        for (let i = 0; i < balls.length; i++) {
-          if (balls[i].isPointInside(px, py)) {
-            balls[i].isDragging = true;
-            draggingBall = balls[i];
-            lastX = px;
-            lastY = py;
-            break;
-          }
-        }
+      if (ball.y < this.y || ball.y > this.y + this.height) {
+        ball.vy = -ball.vy * bounceFactor;
       }
+    }
+  }
+}
 
-      function moveDrag(px, py) {
-        if (draggingBall) {
-          draggingBall.x = px;
-          draggingBall.y = py;
-        }
-      }
+const barriers = [
+  new Barrier(0, 0, canvas.width, 20), 
+  new Barrier(0, canvas.height - 20, canvas.width, 20), 
+  new Barrier(0, 0, 20, canvas.height), 
+  new Barrier(canvas.width - 20, 0, 20, canvas.height) 
+];
 
-      function endDrag(px, py) {
-        if (draggingBall) {
-          draggingBall.throwBall(px, py, lastX, lastY);
-          draggingBall.isDragging = false;
-          draggingBall = null;
-        }
-      }
+const balls = [];
 
-      
-      canvas.addEventListener("mousedown", (e) => {
-        startDrag(e.clientX, e.clientY);
-      });
+function spawnBalls(count) {
+  for (let i = 0; i < count; i++) {
+    const radius = 30;
+    const x = Math.random() * (canvas.width - radius * 2) + radius;
+    const y = Math.random() * (canvas.height - radius * 2) + radius;
+    const color = `hsl(${Math.random() * 360}, 50%, 50%)`;
+    balls.push(new Ball(x, y, radius, color));
+  }
+}
 
-      canvas.addEventListener("mousemove", (e) => {
-        moveDrag(e.clientX, e.clientY);
-      });
+startButton.addEventListener("click", () => {
+  startButton.style.display = 'none';
+  canvas.style.display = 'block';
+  causeChaosButton.style.display = 'block';
 
-      canvas.addEventListener("mouseup", (e) => {
-        endDrag(e.clientX, e.clientY);
-      });
+  spawnBalls(5); 
+  animate();
+});
 
-      
-      canvas.addEventListener("touchstart", (e) => {
-        const touch = e.touches[0];
-        startDrag(touch.clientX, touch.clientY);
-      });
+causeChaosButton.addEventListener("click", () => {
+  chaosMode = !chaosMode;
+  causeChaosButton.textContent = chaosMode ? "Chaos Mode: ON" : "Cause Chaos";
+});
 
-      canvas.addEventListener("touchmove", (e) => {
-        const touch = e.touches[0];
-        moveDrag(touch.clientX, touch.clientY);
-      });
+function detectCollision(ball1, ball2) {
+  const dx = ball2.x - ball1.x;
+  const dy = ball2.y - ball1.y;
+  const distance = Math.sqrt(dx * dx + dy * dy);
 
-      canvas.addEventListener("touchend", (e) => {
-        const touch = e.changedTouches[0];
-        endDrag(touch.clientX, touch.clientY);
-      });
+  return distance < ball1.radius + ball2.radius;
+}
 
-      
-      startButton.addEventListener("click", () => {
-        startButton.style.display = 'none';
-        canvas.style.display = 'block';
-        causeChaosButton.style.display = 'block';
+function resolveCollision(ball1, ball2) {
+  const dx = ball2.x - ball1.x;
+  const dy = ball2.y - ball1.y;
+  const distance = Math.sqrt(dx * dx + dy * dy);
 
-        spawnBalls(5); 
-        animate();
-      });
-    });
-  </script>
-</body>
-</html>
+  if (distance === 0) return;
+
+  const unitX = dx / distance;
+  const unitY = dy / distance;
+
+  const relativeVelocityX = ball2.vx - ball1.vx;
+  const relativeVelocityY = ball2.vy - ball1.vy;
+
+  const velocityAlongCollision = relativeVelocityX * unitX + relativeVelocityY * unitY;
+
+  if (velocityAlongCollision > 0) return;
+
+  const impulse = (2 * velocityAlongCollision) / (ball1.radius + ball2.radius);
+
+  ball1.vx -= impulse * ball2.radius * unitX;
+  ball1.vy -= impulse * ball2.radius * unitY;
+  ball2.vx += impulse * ball1.radius * unitX;
+  ball2.vy += impulse * ball1.radius * unitY;
+
+  if (chaosMode) {
+    spawnBalls(5); 
+  }
+}
+
+function animate() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  for (let i = 0; i < balls.length; i++) {
+    const ball1 = balls[i];
+    ball1.update();
+
+    
+    barriers.forEach(barrier => barrier.resolve
