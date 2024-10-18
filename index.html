@@ -4,14 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BounceBalls</title>
-  
-   <link rel="manifest" href="/manifest.json">
-
+  <link rel="manifest" href="/manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="BounceBalls">
   <link rel="apple-touch-icon" href="https://shorturl.at/bcdFQ">
-  
   <meta property="og:title" content="BounceBalls">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://ooo72.github.io/BounceBalls">
@@ -61,18 +58,18 @@
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
+    
+    const gravity = 0.1;  
+    const friction = 0.95;  
+
     class Ball {
       constructor(x, y, radius, color) {
         this.x = x;
         this.y = y;
         this.radius = radius;
         this.color = color;
-        this.vx = (Math.random() - 0.5) * 10; 
-        this.vy = (Math.random() - 0.5) * 10;
-        this.isDragging = false;
-        this.lastMouseX = 0;  
-        this.lastMouseY = 0;
-        this.mass = 1; 
+        this.vx = (Math.random() - 0.5) * 5; 
+        this.vy = (Math.random() - 0.5) * 5; 
       }
 
       draw() {
@@ -84,135 +81,36 @@
       }
 
       update() {
-        if (!this.isDragging) {
-          this.x += this.vx;
-          this.y += this.vy;
+        this.vy += gravity; 
 
-          
-          if (this.x + this.radius > canvas.width || this.x - this.radius < 0) {
-            this.vx = -this.vx;
-          }
-          if (this.y + this.radius > canvas.height || this.y - this.radius < 0) {
-            this.vy = -this.vy;
-          }
+        
+        this.x += this.vx;
+        this.y += this.vy;
+
+        
+        if (this.y + this.radius > canvas.height) {
+          this.y = canvas.height - this.radius;
+          this.vy = -this.vy * friction;  
         }
+
+        
+        if (this.x + this.radius > canvas.width || this.x - this.radius < 0) {
+          this.vx = -this.vx;
+        }
+
         this.draw();
       }
-
-      isMouseOver(mx, my) {
-        return Math.sqrt((mx - this.x) ** 2 + (my - this.y) ** 2) < this.radius;
-      }
-
-      
-      hasCollidedWith(otherBall) {
-        const dist = Math.sqrt((this.x - otherBall.x) ** 2 + (this.y - otherBall.y) ** 2);
-        return dist < this.radius + otherBall.radius;
-      }
-
-      
-      resolveCollision(otherBall) {
-        const dx = this.x - otherBall.x;
-        const dy = this.y - otherBall.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-
-        if (distance === 0) return; 
-
-      
-        const normalX = dx / distance;
-        const normalY = dy / distance;
-
-      
-        const tangentX = -normalY;
-        const tangentY = normalX;
-
-        
-        const dpTan1 = this.vx * tangentX + this.vy * tangentY;
-        const dpTan2 = otherBall.vx * tangentX + otherBall.vy * tangentY;
-
-       
-        const dpNorm1 = this.vx * normalX + this.vy * normalY;
-        const dpNorm2 = otherBall.vx * normalX + otherBall.vy * normalY;
-
-        
-        const m1 = (dpNorm1 * (this.mass - otherBall.mass) + 2 * otherBall.mass * dpNorm2) / (this.mass + otherBall.mass);
-        const m2 = (dpNorm2 * (otherBall.mass - this.mass) + 2 * this.mass * dpNorm1) / (this.mass + otherBall.mass);
-
-
-        this.vx = tangentX * dpTan1 + normalX * m1;
-        this.vy = tangentY * dpTan1 + normalY * m1;
-        otherBall.vx = tangentX * dpTan2 + normalX * m2;
-        otherBall.vy = tangentY * dpTan2 + normalY * m2;
-      }
     }
 
+    
     const balls = [];
-    let draggingBall = null;
-    let offsetX, offsetY;
-
-    
-    function handleDragStart(x, y) {
-      for (let ball of balls) {
-        if (ball.isMouseOver(x, y)) {
-          draggingBall = ball;
-          draggingBall.isDragging = true;
-          offsetX = x - ball.x;
-          offsetY = y - ball.y;
-          draggingBall.lastMouseX = x;
-          draggingBall.lastMouseY = y;
-          break;
-        }
-      }
-    }
-
-    function handleDragMove(x, y) {
-      if (draggingBall) {
-        draggingBall.x = x - offsetX;
-        draggingBall.y = y - offsetY;
-
-        
-        const dx = x - draggingBall.lastMouseX;
-        const dy = y - draggingBall.lastMouseY;
-        draggingBall.vx = dx * 0.2;  
-        draggingBall.vy = dy * 0.2;
-
-        draggingBall.lastMouseX = x;
-        draggingBall.lastMouseY = y;
-      }
-    }
-
-    function handleDragEnd() {
-      if (draggingBall) {
-        draggingBall.isDragging = false;
-        draggingBall = null;
-      }
-    }
-
-    
-    canvas.addEventListener("mousedown", (e) => handleDragStart(e.clientX, e.clientY));
-    canvas.addEventListener("mousemove", (e) => handleDragMove(e.clientX, e.clientY));
-    canvas.addEventListener("mouseup", handleDragEnd);
-
-   
-    canvas.addEventListener("touchstart", (e) => {
-      const touch = e.touches[0];
-      handleDragStart(touch.clientX, touch.clientY);
-    });
-
-    canvas.addEventListener("touchmove", (e) => {
-      const touch = e.touches[0];
-      handleDragMove(touch.clientX, touch.clientY);
-    });
-
-    canvas.addEventListener("touchend", handleDragEnd);
-
-  
-    function checkCollisions() {
-      for (let i = 0; i < balls.length; i++) {
-        for (let j = i + 1; j < balls.length; j++) {
-          if (balls[i].hasCollidedWith(balls[j])) {
-            balls[i].resolveCollision(balls[j]);
-          }
-        }
+    function createBalls() {
+      for (let i = 0; i < 5; i++) {
+        const radius = 30;
+        const x = Math.random() * (canvas.width - radius * 2) + radius;
+        const y = Math.random() * (canvas.height - radius * 2) + radius;
+        const color = `hsl(${Math.random() * 360}, 50%, 50%)`;
+        balls.push(new Ball(x, y, radius, color));
       }
     }
 
@@ -223,33 +121,16 @@
         ball.update();
       }
 
-      checkCollisions();
-
       requestAnimationFrame(animate);
     }
 
-    
     startButton.addEventListener("click", () => {
-      
-      startButton.style.display = 'none';
-      
-      
-      canvas.style.display = 'block';
-
-      
-      for (let i = 0; i < 5; i++) {
-        const radius = 30;
-        const x = Math.random() * (canvas.width - radius * 2) + radius;
-        const y = Math.random() * (canvas.height - radius * 2) + radius;
-        const color = `hsl(${Math.random() * 360}, 50%, 50%)`;
-        balls.push(new Ball(x, y, radius, color));
-      }
-
-     
-      animate();
+      startButton.style.display = "none";  
+      canvas.style.display = "block";       
+      createBalls();                      
+      animate();                           
     });
 
-    
     window.addEventListener("resize", () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
