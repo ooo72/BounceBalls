@@ -142,6 +142,71 @@
 
         spawnBalls(5); 
         animate();
+        
+function startDrag(px, py) {
+        for (let i = 0; i < balls.length; i++) {
+          if (balls[i].isPointInside(px, py)) {
+            balls[i].isDragging = true;
+            draggingBall = balls[i];
+            lastX = px;
+            lastY = py;
+            break;
+          }
+        }
+      }
+
+      function moveDrag(px, py) {
+        if (draggingBall) {
+          draggingBall.x = px;
+          draggingBall.y = py;
+        }
+      }
+
+      function endDrag(px, py) {
+        if (draggingBall) {
+          draggingBall.throwBall(px, py, lastX, lastY);
+          draggingBall.isDragging = false;
+          draggingBall = null;
+        }
+      }
+
+      
+      canvas.addEventListener("mousedown", (e) => {
+        startDrag(e.clientX, e.clientY);
+      });
+
+      canvas.addEventListener("mousemove", (e) => {
+        moveDrag(e.clientX, e.clientY);
+      });
+
+      canvas.addEventListener("mouseup", (e) => {
+        endDrag(e.clientX, e.clientY);
+      });
+
+      
+      canvas.addEventListener("touchstart", (e) => {
+        const touch = e.touches[0];
+        startDrag(touch.clientX, touch.clientY);
+      });
+
+      canvas.addEventListener("touchmove", (e) => {
+        const touch = e.touches[0];
+        moveDrag(touch.clientX, touch.clientY);
+      });
+
+      canvas.addEventListener("touchend", (e) => {
+        const touch = e.changedTouches[0];
+        endDrag(touch.clientX, touch.clientY);
+      });
+
+      
+      startButton.addEventListener("click", () => {
+        startButton.style.display = 'none';
+        canvas.style.display = 'block';
+        causeChaosButton.style.display = 'block';
+
+        spawnBalls(5); 
+        animate();
       });
     });
   </script>
