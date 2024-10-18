@@ -70,6 +70,7 @@
         this.color = color;
         this.vx = (Math.random() - 0.5) * 5; 
         this.vy = (Math.random() - 0.5) * 5; 
+        this.isDragging = false;  
       }
 
       draw() {
@@ -81,13 +82,15 @@
       }
 
       update() {
-        this.vy += gravity; 
+        if (!this.isDragging) {
+          this.vy += gravity;  
+        }
 
         
         this.x += this.vx;
         this.y += this.vy;
 
-        
+      
         if (this.y + this.radius > canvas.height) {
           this.y = canvas.height - this.radius;
           this.vy = -this.vy * friction;  
@@ -99,6 +102,12 @@
         }
 
         this.draw();
+      }
+
+      
+      isMouseOver(mouseX, mouseY) {
+        const distance = Math.hypot(mouseX - this.x, mouseY - this.y);
+        return distance < this.radius;
       }
     }
 
@@ -123,6 +132,46 @@
 
       requestAnimationFrame(animate);
     }
+
+    let mouseX, mouseY;
+    let selectedBall = null; 
+
+    canvas.addEventListener("mousedown", (event) => {
+      mouseX = event.clientX;
+      mouseY = event.clientY;
+
+     
+      for (let ball of balls) {
+        if (ball.isMouseOver(mouseX, mouseY)) {
+          selectedBall = ball;  
+          ball.isDragging = true;  
+          break;
+        }
+      }
+    });
+
+    canvas.addEventListener("mousemove", (event) => {
+      mouseX = event.clientX;
+      mouseY = event.clientY;
+
+      if (selectedBall) {
+       
+        selectedBall.x = mouseX;
+        selectedBall.y = mouseY;
+        selectedBall.vx = 0;  
+        selectedBall.vy = 0;  
+      }
+    });
+
+    canvas.addEventListener("mouseup", (event) => {
+      if (selectedBall) {
+        
+        selectedBall.vx = (mouseX - selectedBall.x) * 0.5; 
+        selectedBall.vy = (mouseY - selectedBall.y) * 0.5; 
+        selectedBall.isDragging = false; 
+        selectedBall = null; 
+      }
+    });
 
     startButton.addEventListener("click", () => {
       startButton.style.display = "none";  
