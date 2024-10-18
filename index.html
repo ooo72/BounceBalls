@@ -159,8 +159,9 @@ class Barrier {
   }
 }
 
+
 const barriers = [
-  new Barrier(0, 0, canvas.width, 20), 
+  new Barrier(0, 0, canvas.width, 20),
   new Barrier(0, canvas.height - 20, canvas.width, 20), 
   new Barrier(0, 0, 20, canvas.height), 
   new Barrier(canvas.width - 20, 0, 20, canvas.height) 
@@ -237,4 +238,19 @@ function animate() {
     ball1.update();
 
     
-    barriers.forEach(barrier => barrier.resolve
+    barriers.forEach(barrier => barrier.resolveCollision(ball1));
+
+    
+    for (let j = i + 1; j < balls.length; j++) {
+      const ball2 = balls[j];
+      if (detectCollision(ball1, ball2)) {
+        resolveCollision(ball1, ball2);
+      }
+    }
+  }
+
+  requestAnimationFrame(animate);
+}
+
+window.addEventListener('resize', () => {
+  canvas.width = window.innerWidth
