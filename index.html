@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BounceBalls</title>
+  <title>Bounce Balls</title>
   <link rel="manifest" href="/manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="BounceBalls">
-  <link rel="apple-touch-icon" href="https://shorturl.at/bcdFQ">
+  <link rel="apple-touch-icon" href="https://www.pngplay.com/wp-content/uploads/6/Red-Ball-Transparent-PNG.png">
   <meta property="og:title" content="BounceBalls">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://ooo72.github.io/BounceBalls">
-  <meta property="og:image" content="https://shorturl.at/bcdFQ">
+  <meta property="og:image" content="https://www.pngplay.com/wp-content/uploads/6/Red-Ball-Transparent-PNG.png">
   <meta property="og:description" content="”booweowinnnggggg”">
   <style>
     body {
@@ -38,7 +38,7 @@
     }
 
     canvas {
-      display: none;
+      display: none; 
       position: absolute;
       top: 0;
       left: 0;
@@ -54,13 +54,9 @@
     const ctx = canvas.getContext("2d");
     const startButton = document.getElementById("startButton");
 
-    
+
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-
-    
-    const gravity = 0.1;  
-    const friction = 0.95;  
 
     class Ball {
       constructor(x, y, radius, color) {
@@ -68,9 +64,9 @@
         this.y = y;
         this.radius = radius;
         this.color = color;
-        this.vx = (Math.random() - 0.5) * 5; 
-        this.vy = (Math.random() - 0.5) * 5; 
-        this.isDragging = false;  
+        this.vx = (Math.random() - 0.5) * 10;
+        this.vy = (Math.random() - 0.5) * 10;
+        this.isDragging = false;
       }
 
       draw() {
@@ -83,43 +79,75 @@
 
       update() {
         if (!this.isDragging) {
-          this.vy += gravity;  
+          this.x += this.vx;
+          this.y += this.vy;
+
+          
+          if (this.x + this.radius > canvas.width || this.x - this.radius < 0) {
+            this.vx = -this.vx;
+          }
+          if (this.y + this.radius > canvas.height || this.y - this.radius < 0) {
+            this.vy = -this.vy;
+          }
         }
-
-        
-        this.x += this.vx;
-        this.y += this.vy;
-
-      
-        if (this.y + this.radius > canvas.height) {
-          this.y = canvas.height - this.radius;
-          this.vy = -this.vy * friction;  
-        }
-
-        
-        if (this.x + this.radius > canvas.width || this.x - this.radius < 0) {
-          this.vx = -this.vx;
-        }
-
         this.draw();
       }
 
-      
-      isMouseOver(mouseX, mouseY) {
-        const distance = Math.hypot(mouseX - this.x, mouseY - this.y);
-        return distance < this.radius;
+      isTouchOver(tx, ty) {
+        return Math.sqrt((tx - this.x) ** 2 + (ty - this.y) ** 2) < this.radius;
       }
     }
 
-    
     const balls = [];
-    function createBalls() {
-      for (let i = 0; i < 5; i++) {
-        const radius = 30;
-        const x = Math.random() * (canvas.width - radius * 2) + radius;
-        const y = Math.random() * (canvas.height - radius * 2) + radius;
-        const color = `hsl(${Math.random() * 360}, 50%, 50%)`;
-        balls.push(new Ball(x, y, radius, color));
+    let draggingBall = null;
+    let offsetX, offsetY;
+
+    
+    canvas.addEventListener("mousedown", (e) => {
+      handlePointerDown(e.clientX, e.clientY);
+    });
+
+    canvas.addEventListener("mousemove", (e) => {
+      handlePointerMove(e.clientX, e.clientY);
+    });
+
+    canvas.addEventListener("mouseup", handlePointerUp);
+
+    canvas.addEventListener("touchstart", (e) => {
+      const touch = e.touches[0];
+      handlePointerDown(touch.clientX, touch.clientY);
+    });
+
+    canvas.addEventListener("touchmove", (e) => {
+      const touch = e.touches[0];
+      handlePointerMove(touch.clientX, touch.clientY);
+    });
+
+    canvas.addEventListener("touchend", handlePointerUp);
+
+    function handlePointerDown(x, y) {
+      for (let ball of balls) {
+        if (ball.isTouchOver(x, y)) {
+          draggingBall = ball;
+          draggingBall.isDragging = true;
+          offsetX = x - ball.x;
+          offsetY = y - ball.y;
+          break;
+        }
+      }
+    }
+
+    function handlePointerMove(x, y) {
+      if (draggingBall) {
+        draggingBall.x = x - offsetX;
+        draggingBall.y = y - offsetY;
+      }
+    }
+
+    function handlePointerUp() {
+      if (draggingBall) {
+        draggingBall.isDragging = false;
+        draggingBall = null;
       }
     }
 
@@ -133,53 +161,28 @@
       requestAnimationFrame(animate);
     }
 
-    let mouseX, mouseY;
-    let selectedBall = null; 
-
-    canvas.addEventListener("mousedown", (event) => {
-      mouseX = event.clientX;
-      mouseY = event.clientY;
-
-     
-      for (let ball of balls) {
-        if (ball.isMouseOver(mouseX, mouseY)) {
-          selectedBall = ball;  
-          ball.isDragging = true;  
-          break;
-        }
-      }
-    });
-
-    canvas.addEventListener("mousemove", (event) => {
-      mouseX = event.clientX;
-      mouseY = event.clientY;
-
-      if (selectedBall) {
-       
-        selectedBall.x = mouseX;
-        selectedBall.y = mouseY;
-        selectedBall.vx = 0;  
-        selectedBall.vy = 0;  
-      }
-    });
-
-    canvas.addEventListener("mouseup", (event) => {
-      if (selectedBall) {
-        
-        selectedBall.vx = (mouseX - selectedBall.x) * 0.5; 
-        selectedBall.vy = (mouseY - selectedBall.y) * 0.5; 
-        selectedBall.isDragging = false; 
-        selectedBall = null; 
-      }
-    });
-
+    
     startButton.addEventListener("click", () => {
-      startButton.style.display = "none";  
-      canvas.style.display = "block";       
-      createBalls();                      
-      animate();                           
+
+      startButton.style.display = 'none';
+      
+    
+      canvas.style.display = 'block';
+
+      
+      for (let i = 0; i < 5; i++) {
+        const radius = 30;
+        const x = Math.random() * (canvas.width - radius * 2) + radius;
+        const y = Math.random() * (canvas.height - radius * 2) + radius;
+        const color = `hsl(${Math.random() * 360}, 50%, 50%)`;
+        balls.push(new Ball(x, y, radius, color));
+      }
+
+    
+      animate();
     });
 
+   
     window.addEventListener("resize", () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
