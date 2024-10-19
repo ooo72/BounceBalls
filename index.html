@@ -54,7 +54,6 @@
     const ctx = canvas.getContext("2d");
     const startButton = document.getElementById("startButton");
 
-
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
@@ -67,6 +66,8 @@
         this.vx = (Math.random() - 0.5) * 10;
         this.vy = (Math.random() - 0.5) * 10;
         this.isDragging = false;
+        this.lastX = this.x;  
+        this.lastY = this.y;
       }
 
       draw() {
@@ -101,6 +102,7 @@
     const balls = [];
     let draggingBall = null;
     let offsetX, offsetY;
+    let lastTime, currentTime;
 
     
     canvas.addEventListener("mousedown", (e) => {
@@ -132,6 +134,7 @@
           draggingBall.isDragging = true;
           offsetX = x - ball.x;
           offsetY = y - ball.y;
+          lastTime = Date.now(); 
           break;
         }
       }
@@ -139,13 +142,19 @@
 
     function handlePointerMove(x, y) {
       if (draggingBall) {
+        draggingBall.lastX = draggingBall.x;
+        draggingBall.lastY = draggingBall.y;
         draggingBall.x = x - offsetX;
         draggingBall.y = y - offsetY;
+        currentTime = Date.now();
       }
     }
 
     function handlePointerUp() {
       if (draggingBall) {
+        const deltaTime = (currentTime - lastTime) / 1000; 
+        draggingBall.vx = (draggingBall.x - draggingBall.lastX) / deltaTime;
+        draggingBall.vy = (draggingBall.y - draggingBall.lastY) / deltaTime;
         draggingBall.isDragging = false;
         draggingBall = null;
       }
@@ -163,10 +172,7 @@
 
     
     startButton.addEventListener("click", () => {
-
       startButton.style.display = 'none';
-      
-    
       canvas.style.display = 'block';
 
       
@@ -182,7 +188,7 @@
       animate();
     });
 
-   
+    
     window.addEventListener("resize", () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
