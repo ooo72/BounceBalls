@@ -14,6 +14,18 @@
   <meta property="og:url" content="https://ooo72.github.io/BounceBalls">
   <meta property="og:image" content="https://www.pngplay.com/wp-content/uploads/6/Red-Ball-Transparent-PNG.png">
   <meta property="og:description" content="”booweowinnnggggg”">
+
+  <script>
+    if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/service-worker.js').then(function(registration) {
+      console.log('ServiceWorker registration successful with scope: ', registration.scope);
+    }, function(error) {
+      console.log('ServiceWorker registration failed: ', error);
+    });
+  });
+}
+      
   <style>
     body {
       margin: 0;
