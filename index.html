@@ -13,17 +13,42 @@
   <meta property="og:url" content="https://ooo72.github.io/BounceBalls">
   <meta property="og:image" content="https://www.pngplay.com/wp-content/uploads/6/Red-Ball-Transparent-PNG.png">
   <meta property="og:description" content="”booweowinnnggggg”">
-  <script>
+  
+    <script>
     if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function() {
-    navigator.serviceWorker.register('/service-worker.js').then(function(registration) {
-      console.log('ServiceWorker registration successful with scope: ', registration.scope);
-    }, function(error) {
-      console.log('ServiceWorker registration failed: ', error);
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/service-worker.js').then(function(registration) {
+                console.log('ServiceWorker registration successful with scope: ', registration.scope);
+            }, function(error) {
+                console.log('ServiceWorker registration failed: ', error);
+            });
+        });
+    }
+
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+
+      
+        const addToHomeScreenButton = document.createElement('button');
+        addToHomeScreenButton.innerText = 'install';
+        document.body.appendChild(addToHomeScreenButton);
+
+        addToHomeScreenButton.addEventListener('click', () => {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    console.log('User accepted A2HS prompt');
+                } else {
+                    console.log('User dismissed A2HS prompt');
+                }
+                deferredPrompt = null;
+            });
+        });
     });
-  });
-}
-      </script>
+</script>
+  
   <style>
     body {
       margin: 0;
