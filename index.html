@@ -55,31 +55,6 @@
         });
     }
 
-    let deferredPrompt;
-    const addToHomeScreenButton = document.createElement('button');
-    addToHomeScreenButton.id = 'installButton';
-    addToHomeScreenButton.innerText = 'Install App';
-    document.body.appendChild(addToHomeScreenButton);
-
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        addToHomeScreenButton.style.display = 'block'; // Show the button when the prompt is available
-
-        addToHomeScreenButton.addEventListener('click', () => {
-            deferredPrompt.prompt();
-            deferredPrompt.userChoice.then((choiceResult) => {
-                if (choiceResult.outcome === 'accepted') {
-                    console.log('User accepted A2HS prompt');
-                } else {
-                    console.log('User dismissed A2HS prompt');
-                }
-                deferredPrompt = null;
-            });
-        });
-    });
-  
-  
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
     const startButton = document.getElementById("startButton");
