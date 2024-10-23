@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bounce Balls</title>
   <link rel="manifest" href="/manifest.json">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" href="https://www.pngplay.com/wp-content/uploads/6/Red-Ball-Transparent-PNG.png">
   <meta property="og:title" content="BounceBalls">
   <meta property="og:type" content="app">
@@ -14,42 +14,7 @@
   <meta property="og:image" content="https://www.pngplay.com/wp-content/uploads/6/Red-Ball-Transparent-PNG.png">
   <meta property="og:description" content="”booweowinnnggggg”">
   
-    <script>
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-            navigator.serviceWorker.register('/service-worker.js').then(function(registration) {
-                console.log('ServiceWorker registration successful with scope: ', registration.scope);
-            }, function(error) {
-                console.log('ServiceWorker registration failed: ', error);
-            });
-        });
-    }
-
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-
-      
-        const addToHomeScreenButton = document.createElement('button');
-        addToHomeScreenButton.innerText = 'install';
-        document.body.appendChild(addToHomeScreenButton);
-
-        addToHomeScreenButton.addEventListener('click', () => {
-            deferredPrompt.prompt();
-            deferredPrompt.userChoice.then((choiceResult) => {
-                if (choiceResult.outcome === 'accepted') {
-                    console.log('User accepted A2HS prompt');
-                } else {
-                    console.log('User dismissed A2HS prompt');
-                }
-                deferredPrompt = null;
-            });
-        });
-    });
-</script>
-  
-  <style>
+     <style>
     body {
       margin: 0;
       overflow: hidden;
@@ -77,14 +42,63 @@
       position: absolute;
       top: 0;
       left: 0;
+
+  #installButton {
+      display: none;
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      padding: 15px 30px;
+      font-size: 16px;
+      cursor: pointer;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
     }
   </style>
 </head>
 <body>
   <button id="startButton">Start</button>
   <canvas id="canvas"></canvas>
-  
+
   <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/service-worker.js').then(function(registration) {
+                console.log('ServiceWorker registration successful with scope: ', registration.scope);
+            }, function(error) {
+                console.log('ServiceWorker registration failed: ', error);
+            });
+        });
+    }
+
+    let deferredPrompt;
+    const addToHomeScreenButton = document.createElement('button');
+    addToHomeScreenButton.id = 'installButton';
+    addToHomeScreenButton.innerText = 'Install App';
+    document.body.appendChild(addToHomeScreenButton);
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        addToHomeScreenButton.style.display = 'block'; // Show the button when the prompt is available
+
+        addToHomeScreenButton.addEventListener('click', () => {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    console.log('User accepted A2HS prompt');
+                } else {
+                    console.log('User dismissed A2HS prompt');
+                }
+                deferredPrompt = null;
+            });
+        });
+    });
+  
+  
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
     const startButton = document.getElementById("startButton");
